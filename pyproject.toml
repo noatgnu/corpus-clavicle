@@ -9,13 +9,14 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.13"
 django = "^4.2.6"
 django-postgres-extra = "^2.0.8"
 psycopg2 = "^2.9.9"
 djangorestframework = "^3.14.0"
 django-filter = "^23.3"
 drf-url-filters = "^0.5.1"
+pandas = "^2.1.1"
 
 
 [build-system]

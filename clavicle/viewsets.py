@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.postgres.search import SearchVector
 from django.db.models import TextField
 from django.db.models.functions import Cast
@@ -5,7 +7,7 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.response import Response
-
+import pandas as pd
 from clavicle.models import RawData, DifferentialAnalysis
 from clavicle.serializers import RawDataSerializer, DifferentialAnalysisSerializer
 from clavicle.validations import raw_data_query_schema
@@ -41,9 +43,22 @@ class RawDataViewSets(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, **kwargs):
-        rawdata = RawData(name=request.data['name'], description=request.data['description'], index_col=request.data['index_col'], metadata=request.data['metadata'], file_type=request.data['file_type'])
+        rawdata = RawData(name=request.data['name'], description=request.data['description'], index_col=request.data['index_col'], metadata=request.data['metadata'], file_type=request.data['file_type'], sample_cols=json.loads(request.data['sample_cols']) )
         # read uploaded tabulated file into data jsonfield
-        print(request.data["data"])
+        if request.data["file_type"] == "csv":
+            df = pd.read_csv(request.data["file"])
+        elif request.data["file_type"] == "tsv":
+            df = pd.read_csv(request.data["file"], sep="\t")
+        elif request.data["file_type"] == "txt":
+            df = pd.read_csv(request.data["file"], sep="\t")
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        print(rawdata.sample_cols)
+        melted = df.melt(id_vars=request.data['index_col'], value_vars=[i["name"] for i in rawdata.sample_cols], var_name="sample", value_name="value")
+        melted.rename(columns={request.data["index_col"]: "index"}, inplace=True)
+        rawdata.value = melted.to_dict(orient="records")
+        request.data["file"].seek(0)
+        rawdata.data = request.data["file"].read().decode("utf-8")
         rawdata.save()
         return Response(status=status.HTTP_201_CREATED)
 
