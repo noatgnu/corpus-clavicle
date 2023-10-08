@@ -1,0 +1,13 @@
+# docker-compose file with postgres
+
+version: '3.7'
+services:
+  postgres:
+    image: postgres:latest
+    container_name: clavicle-postgres
+    environment:
+      - POSTGRES_DB=clavicle
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=testpostgrest
+    ports:
+      - "5432:5432"
