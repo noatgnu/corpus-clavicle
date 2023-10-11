@@ -13,14 +13,14 @@ class Migration(migrations.Migration):
     operations = [
         PostgresAddRangePartition(
             model_name='DifferentialAnalysis',
-            name='DifferentialAnalysis_1_to_1000',
+            name='DifferentialAnalysis_1_to_10000',
             from_values=1,
-            to_values=1000,
+            to_values=10000,
         ),
         PostgresAddRangePartition(
             model_name='RawData',
-            name='RawData_1_to_1000',
+            name='RawData_1_to_10000',
             from_values=1,
-            to_values=1000,
+            to_values=10000,
         ),
     ]

@@ -43,7 +43,15 @@ class RawDataViewSets(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, **kwargs):
-        rawdata = RawData(name=request.data['name'], description=request.data['description'], index_col=request.data['index_col'], metadata=request.data['metadata'], file_type=request.data['file_type'], sample_cols=json.loads(request.data['sample_cols']) )
+        print(request.data)
+        rawdata = RawData(
+            name=request.data['name'],
+            description=request.data['description'],
+            index_col=request.data['index_col'],
+            metadata=request.data['metadata'],
+            file_type=request.data['file_type'],
+            sample_cols=json.loads(request.data['sample_cols'])
+        )
         # read uploaded tabulated file into data jsonfield
         if request.data["file_type"] == "csv":
             df = pd.read_csv(request.data["file"])
@@ -53,8 +61,8 @@ class RawDataViewSets(viewsets.ModelViewSet):
             df = pd.read_csv(request.data["file"], sep="\t")
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        print(rawdata.sample_cols)
-        melted = df.melt(id_vars=request.data['index_col'], value_vars=[i["name"] for i in rawdata.sample_cols], var_name="sample", value_name="value")
+
+        melted = df.melt(id_vars=request.data['index_col'], value_vars=[i["name"] for i in rawdata.sample_cols], var_name="sample", value_name="value").fillna("")
         melted.rename(columns={request.data["index_col"]: "index"}, inplace=True)
         rawdata.value = melted.to_dict(orient="records")
         request.data["file"].seek(0)
