@@ -45,7 +45,6 @@ class RawData(PostgresPartitionedModel):
     description = models.TextField(blank=True, null=True)
     data = models.TextField(blank=True, null=True)
     index_col = models.TextField(blank=True, null=True)
-    sample_cols = models.JSONField(blank=True, null=True)
     metadata = models.JSONField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -72,3 +71,20 @@ class RawData(PostgresPartitionedModel):
 
     def __repr__(self):
         return f"{self.name} {self.created_at}"
+
+
+class SampleGroupAssignments(PostgresPartitionedModel):
+    """
+    A Model to store sample group assignments with link to RawData model
+    """
+    sample_cols = models.JSONField(blank=True, null=True)
+    raw_data = models.ForeignKey("RawData", on_delete=models.CASCADE, related_name="sample_group_assignments", blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class PartitioningMeta:
+        method = PostgresPartitioningMethod.RANGE
+        key = ["id"]
+        ordering = ["id"]
+        app_label = "clavicle"
+        using = "clavicle"

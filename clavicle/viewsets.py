@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.response import Response
 import pandas as pd
-from clavicle.models import RawData, DifferentialAnalysis
+from clavicle.models import RawData, DifferentialAnalysis, SampleGroupAssignments
 from clavicle.serializers import RawDataSerializer, DifferentialAnalysisSerializer
 from clavicle.validations import raw_data_query_schema
 
@@ -49,8 +49,7 @@ class RawDataViewSets(viewsets.ModelViewSet):
             description=request.data['description'],
             index_col=request.data['index_col'],
             metadata=request.data['metadata'],
-            file_type=request.data['file_type'],
-            sample_cols=json.loads(request.data['sample_cols'])
+            file_type=request.data['file_type']
         )
         # read uploaded tabulated file into data jsonfield
         if request.data["file_type"] == "csv":
@@ -61,13 +60,17 @@ class RawDataViewSets(viewsets.ModelViewSet):
             df = pd.read_csv(request.data["file"], sep="\t")
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        sample_assignments = SampleGroupAssignments.objects.create(sample_cols=json.loads(request.data["sample_cols"]))
 
-        melted = df.melt(id_vars=request.data['index_col'], value_vars=[i["name"] for i in rawdata.sample_cols], var_name="sample", value_name="value").fillna("")
+        print(sample_assignments.sample_cols)
+        melted = df.melt(id_vars=request.data['index_col'], value_vars=[i["name"] for i in sample_assignments.sample_cols], var_name="sample", value_name="value").fillna("")
         melted.rename(columns={request.data["index_col"]: "index"}, inplace=True)
         rawdata.value = melted.to_dict(orient="records")
         request.data["file"].seek(0)
         rawdata.data = request.data["file"].read().decode("utf-8")
         rawdata.save()
+        sample_assignments.raw_data = rawdata
+        sample_assignments.save()
         return Response(status=status.HTTP_201_CREATED)
 
     def update(self, request, pk=None, **kwargs):

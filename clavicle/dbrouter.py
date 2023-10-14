@@ -4,7 +4,7 @@ class ClavicleRouter:
     """
 
     route_app_labels = {'clavicle'}
-    model_names = {'differentialanalysis', 'rawdata'}
+    model_names = {'differentialanalysis', 'rawdata', 'samplegroupassignments'}
 
     def db_for_read(self, model, **hints):
         """
